@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>View Statement</title>
+    <link href="Content/bootstrap.min.css" rel="stylesheet" />
+<script
+  src="https://code.jquery.com/jquery-3.6.1.js"
+  integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
+  crossorigin="anonymous"></script>
+  <script>
+  	function searchStatement() {
+  		debugger;
+	  	hideStatementBlock();
+	  	var accountId=getIdValue("accountId");
+	  	if(accountId == "NA"){
+	  		accountId="0";
+	  	}
+	    var fromDate=getIdValue("fromDate");
+	    var toDate=getIdValue("toDate");
+	    var fromAmt=getIdValue("fromAmt");
+	    var toAmt=getIdValue("toAmt");
+	    var urlParams=accountId+"/"+fromDate+"/"+toDate+"/"+fromAmt+"/"+toAmt;
+		  $.ajax({
+		    url: '/api/v1/getStatementData/'+urlParams,
+		    type: 'GET',
+		    dataType: 'json',
+		    success: function (statements) {
+		     	populateStatements(statements);
+		    },
+		    error: function (request, message, error) {
+		      alert("error fn: "+request+":message"+message+" error"+error);
+		    }
+		  });
+	}
+	
+	function getIdValue(attribute){
+		var attributeValue=document.getElementById(attribute).value;
+		if(attributeValue==null || attributeValue.length==0){
+			
+				attributeValue="NA";
+				
+			
+		}
+		return attributeValue;
+	}
+
+function hideStatementBlock(){
+	$("div.statement-error").hide();
+	$("div.statement-display").hide();
+	$("#statementTable tr").remove(); 
+}
+
+function populateStatements(statements){
+
+	var apiStatus=statements.successStatus;
+	if(apiStatus){
+		
+			var table = $("#statementTable tbody");
+			document.getElementById("accountNumber").value=statements.responseData.accountNumber;
+			if(statements.responseData.statements!=null && statements.responseData.statements!=""){
+		  	  $.each(statements.responseData.statements, function(idx, elem){
+		    	    table.append("<tr><td>"+elem.amount+"</td>   <td>"+elem.dateField+"</td></tr>");
+		    	});
+		    }else{
+		    	 table.append("<tr><td colspan=2>No Data found</td></tr>");
+		    }
+			$("div.statement-display").show();
+		
+	}else{
+		$("div.statement-error").show();
+		result = "<span style='color:red'>" + statements.responseDescription + "</span>";
+		document.getElementById('statementErrorMessage').innerHTML=result;
+	}
+}
+</script>
+  	
+</head>
+
+<body>
+            	<table>
+            		<th>
+            				<tr>
+                                		<th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                                		<th><a th:href="@{/logout}">Logout</a></th> 
+                                
+                 			</tr>
+                 		</th>
+                 	</table>
+               
+    	<div>
+        	<h3>Get Statement</h3>
+        
+        	<label for="account">Account Id:</label>
+  			<input type="text" id="accountId" name="" value=""><br><br>
+  			
+  			<label for="fromDate">From Date:</label>
+  			<input type="text" id="fromDate"  placeholder="dd.mm.yyyy" name="" value="">
+  			
+  			<label for="toDate">To Date:</label>
+  			<input type="text" id="toDate" placeholder="dd.mm.yyyy" name="" value=""><br><br>
+  			
+  			<label for="fromAmt">From Amt:</label>
+  			<input type="text" id="fromAmt" name="" value="">
+  			
+  			<label for="toAmt">To Amt:</label>
+  			<input type="text" id="toAmt" name="" value=""><br><br>
+  			
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="col-md-10">
+                <button class="btn btn-default" 
+			        onclick="searchStatement();"  
+			        type="button"  
+			        data-id="1"
+			        >Search Statement</button>
+                </div>
+            </div>
+        </div>
+    </div>
+   <br/>
+    <br/>
+ <div id="statement-display" class="statement-display" style="display:none">
+ 	Statements
+ 	 <br/>
+ 	<label for="fromAmt">AccountNumber:</label>
+  	<input type="text" id="accountNumber" name="" value="">
+  			
+  <div class="col-sm-6">
+    <table id="statementTable" 
+           class="statementTable" border="1">
+      <thead>
+        <tr>
+          <th>Amount</th>
+          <th>Transaction Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div id="statement-error" class="statement-error" style="display:none">
+ 	 <br/>
+ 	<label>ErrorMessage:</label>
+    <label id="statementErrorMessage"></label>
+</div>
+    
+</body>
+
+</html>
